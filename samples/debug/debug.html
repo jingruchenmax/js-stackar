@@ -7,10 +7,14 @@
   
   <script type="text/javascript" src="../../src/cv.js"></script> 
   <script type="text/javascript" src="../../src/aruco.js"></script> 
+  <script type="text/javascript" src="../../src/dictionaries/custom_library.js"></script> 
 
   <script>
     var camera, canvas, context, imageData, pixels, detector;
     var debugImage, warpImage, homographyImage;
+
+    //example of custom dictionary
+
 
     function onLoad(){
       camera = document.getElementById("video");
@@ -57,8 +61,10 @@
         
       imageData = context.getImageData(0, 0, camera.width, camera.height);
       pixels = [];
-      detector = new AR.Detector();
-      
+
+      detector =  new AR.Detector({
+      dictionaryName: 'Custom'});
+
       debugImage = context.createImageData(camera.width, camera.height);
       warpImage = context.createImageData(49, 49);
       homographyImage = new CV.Image();

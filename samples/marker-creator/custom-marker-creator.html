@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Button Grid</title>
+  <style>
+    button {
+      width: 30px;
+      height: 30px;
+      border:1px solid gray;
+      background-color: white;
+      margin: 0; /* Add this line */
+      padding: 0; /* Add this line */
+    }
+
+    color-button {
+        width: 50px;
+        height: 50px;
+        border: none;
+        margin: 5px;
+      }
+    #grid {
+  line-height: 0; /* Add this line */
+}
+
+    .save-button {
+      background-color: green;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      margin-right: 10px;
+      width: 150px; 
+      cursor: pointer;
+    }
+
+    .clear-button {
+      background-color: red;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      width: 150px; 
+      cursor: pointer;
+    }
+
+    .create-button {
+      background-color: gray;
+      color: black;
+      border: 1px;
+      padding: 5px 10px;
+      width: 150px; 
+      cursor: pointer;
+    }
+
+    .delete-button {
+  background-color: red;
+  font-size: 16px;
+  width: 80px; 
+  border: none;
+  cursor: pointer;
+}
+
+svg {
+  height:100%;
+  width: 100%;
+}
+#markerSVG {
+  height: 40%;
+  width: 40%;
+}
+  </style>
+</head>
+<body>
+    <div>
+        <label for="width-input">Pattern Width:</label>
+        <input type="number" id="width-input" min="1" max="7" value="5">
+        <button class="create-button" onclick="createGrid()">Create Grid</button>
+    </div>
+
+    <div>
+      <label for="marker-width">Marker Width:</label>
+      <input type="number" id="marker-width" min="50" max="500" unit="50" value="200">
+  </div>
+
+  <div id="grid"></div>
+
+  <div>
+    <label>Binary string:</label>
+    <span id="binary-string"></span>
+  </div>
+
+  <div>
+    <label>Hex code:</label>
+    <span id="hex-code"></span>
+  </div>
+
+  <div>
+    <button class="clear-button" onclick="clearPattern()">Clear Pattern</button>
+  </div>
+
+  <div>
+    <label for="layer-index">Layer:</label>
+    <input type="number" id="layer-index" min="1" max="10" value="1">
+  </div>
+
+  <div>
+    <label for="threshold-input">Threshold:</label>
+    <input type="range" id="threshold-input" min="0" max="1" step="0.01" value="0.5">
+  </div>
+
+  <div>
+  <label for="toggle-checkbox">Ring-style generation:</label>
+  <input type="checkbox" id="toggle-ring">
+</div>
+ 
+  <div>
+    <button class="create-button" onclick="generateRandomPattern(parseFloat(document.getElementById('threshold-input').value))">Generate Pattern</button>
+  </div>
+
+  <div>
+    <button class="save-button" onclick="savePattern()">Save Pattern</button>
+  </div>
+
+  <div>
+    <button class="create-button" onclick="createCombination()">Generate List & Code</button>
+  </div>
+
+  <div>
+    <!-- Display the color options from the palette array -->
+    <h2>Marker colors</h2>
+    <div id="color-buttons">
+      <input type="color" id="color-picker0" ></input>
+      <input type="color" id="color-picker1" ></input>
+      <input type="color" id="color-picker2" ></input>
+      <input type="color" id="color-picker3" ></input>
+      <input type="color" id="color-picker4" ></input>
+      <input type="color" id="color-picker5" ></input>
+      <input type="color" id="color-picker6" ></input>
+      <input type="color" id="color-picker7" ></input>
+      <input type="color" id="color-picker8" ></input>
+      <input type="color" id="color-picker9" ></input>
+    </div>
+  </div>
+
+  <div>
+    <textarea id="note-area" rows="10" cols="50"></textarea>
+  </div>
+
+
+
+  <table id="pattern-table">
+    <thead>
+      <tr>
+        <th>ID-----</th>
+        <th>Hex---------------</th>
+        <th>Note----------</th>
+        <th>Marker-----</th>
+        <th>Download</th>
+        <th>Delete</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Rows will be inserted dynamically here -->
+    </tbody>
+  </table>
+
+  <div>
+    <div id="markerSVG"> Markers </div>
+  </div>
+
+  <script>
+
+    let width = 5;
+    let height = 5;
+    let grid = document.getElementById('grid');
+    let buttons = [];
+    let binaryString = '';
+    let hexCode = '';
+    // counting in all siblings
+    let codeDict = {};
+    let codeSiblingsDict = {};
+    let codeCombinationDict={};
+    var buttonState =[];
+
+   // let colors = ["#000000", "#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FF00FF", "#00FFFF", "#C0C0C0", "#808080", "#FFFFF0"];
+    let colors = ["#000000", "#000000", "#000000", "#000000", "#000000", "#000000",  "#000000",  "#000000", "#000000", "#000000"];
+    var codes = [];
+    var dict;
+
+    let svgs=[];
+
+    createGrid();
+    createColorPalette();
+
+
+    function createColorPalette(){
+// Add event listeners to each button
+for (let i = 0; i < colors.length; i++) {
+        let colorPicker = document.getElementById("color-picker"+i);
+        colorPicker.value = colors[i];
+        colorPicker.addEventListener("change", function() {
+            colors[i] = colorPicker.value;
+        });
+      }
+    }
+
+    function createGrid() {
+      width = parseInt(document.getElementById('width-input').value);
+      height = width;
+
+      // clear existing grid
+      grid.innerHTML = '';
+
+      // create new grid
+      buttons = [];
+      for (let i = 0; i < height; i++) {
+        const row = [];
+
+        for (let j = 0; j < width; j++) {
+          const button = document.createElement('button');
+          button.addEventListener('click', () => {
+            button.style.backgroundColor = button.style.backgroundColor === 'black' ? 'white' : 'black';
+            updateBinaryStringAndHexCode();
+          });
+          row.push(button);
+          grid.appendChild(button);
+        }
+
+        buttons.push(row);
+        grid.appendChild(document.createElement('br'));
+      }
+      updateBinaryStringAndHexCode();
+    }
+
+    function binaryToHexWithPrefix(binaryString) {
+  const decimalValue = BigInt("0b" + binaryString);
+  const hexString = "0x" + decimalValue.toString(16).toUpperCase();
+  return hexString;
+}
+
+    function hexToBinary(hexString, numDigits) {
+  // Parse the hexadecimal string into an integer
+  const hexInt = BigInt(hexString);
+  
+  // Convert the integer to a binary string
+  let binaryString = hexInt.toString(2);
+  
+  // Add leading 1s if necessary
+  const padding = "1".repeat(numDigits - binaryString.length);
+  binaryString = padding + binaryString;
+  
+  return binaryString;
+}
+
+    function updateBinaryStringAndHexCode() {
+    binaryString = '';
+    hexCode = '';
+    
+      for (let i = 0; i < height; i++) {
+        for (let j = 0; j < width; j++) {
+          binaryString += buttons[i][j].style.backgroundColor == 'black' ? '0' : '1';
+          
+        }
+      }
+      hexCode = binaryToHexWithPrefix(binaryString);
+      document.getElementById('binary-string').textContent = binaryString;
+      document.getElementById('hex-code').textContent = hexCode;
+    }
+
+    function clearPattern() {
+      for (let i = 0; i < height; i++) {
+        for (let j = 0; j < width; j++) {
+          const button = buttons[i][j];
+          button.style.backgroundColor = 'white';
+        }
+      }
+    }
+
+    function savePattern() {
+          // Check if the hex code is already in the code list
+
+          let deadCodeList = Object.values(codeDict).reduce((acc, val) => {return acc.concat(val);}, []);
+
+
+    if (deadCodeList.includes(hexCode)) {
+        alert('This pattern is already included!');
+        return;
+    }
+    else if(isSymmetry()){
+        // having symmetry is bad
+        alert('This pattern is self-symmetry!');
+        return;
+    }
+    else {
+        codeDict[hexCode] = document.getElementById('layer-index').value;
+        codeDict = sortDictionaryByValue(codeDict);
+        createSiblings();
+        createTable();
+        createCodeBlock();
+    }
+    }
+
+    function createCodeBlock()
+    {
+    createARCodeDict();
+    let temp = "var AR = this.AR || require('../aruco').AR;"+"\n" 
+    +"AR.DICTIONARIES['Custom'] = {"+"\n"+"nBits:"+width*height+","+"\n"+"tau: null,"+"\n" + "codeList: [" ;
+
+    for (let i = 0; i < codes.length-1; i++) {
+    temp += ("\'" + codes[i]+"\'"+",");
+    }
+
+    temp+= "\'" + codes[codes.length-1]+"\'" + "]}\n";
+
+    document.getElementById('note-area').value = temp;
+    }
+
+    function createARCodeDict()
+{
+ 
+  codes = Object.keys(codeDict);
+  codes = codes.concat(Object.keys(codeCombinationDict));
+  // if this part is needed, make sure to include aruco.js and cv.js
+//  var AR = this.AR || require('../aruco').AR;
+//  AR.DICTIONARIES['custom'] = {
+//    nBits: width * height,
+//    tau: null,
+//    codeList: codes};
+//  dict = new AR.Dictionary('custom');
+}
+
+  function createTable(){
+
+    let keys = Object.keys(codeDict);
+    let values = Object.values(codeDict);
+    let table = document.getElementById('pattern-table');
+
+  for (let i = table.rows.length - 1; i >= 1; i--) {
+  table.deleteRow(i);
+  }
+
+  for (let i = 0; i < keys.length; i++) {
+    var row = table.insertRow();
+    var idCell = row.insertCell();
+    idCell.textContent = i;
+    var hexCell = row.insertCell();
+    hexCell.textContent = keys[i];
+    var markerCell= row.insertCell();
+    markerCell.innerHTML += generateSVG(hexToBinary(keys[i]),document.getElementById("marker-width").value,1,colors[values[i]-1]);
+    var noteCell= row.insertCell();
+    noteCell.textContent = values[i];
+    var downloadCell = row.insertCell();
+    const downloadButton = document.createElement('button');
+    downloadButton.textContent = 'Download';
+    downloadButton.classList.add('create-button');
+    svgs[i]=markerCell.innerHTML;
+    downloadButton.addEventListener('click', () => download(svgs[i], 'ID-' + i + '.svg', 'image/svg'));
+    downloadCell.appendChild(downloadButton);
+    var deleteCell = row.insertCell();
+    const deleteButton = document.createElement('button');
+    deleteButton.textContent = 'Delete';
+    deleteButton.classList.add('delete-button');
+    deleteButton.addEventListener('click', () => deleteCode(keys[i]));
+    deleteCell.appendChild(deleteButton);
+  }
+    }
+
+    function deleteCode (code){
+      delete codeDict[code];
+      delete codeSiblingsDict[code];
+      createTable();
+    }
+
+    function addCombinationTable(){
+      let keys = Object.keys(codeCombinationDict);
+      let values = Object.values(codeCombinationDict);
+      let table = document.getElementById('pattern-table');
+
+      for (let i = 0; i < keys.length; i++) {
+    var row = table.insertRow();
+    var idCell = row.insertCell();
+    idCell.textContent = table.rows.length-2;
+    var hexCell = row.insertCell();
+    hexCell.textContent = keys[i];
+    var markerCell= row.insertCell();
+    markerCell.innerHTML += generateSVG(hexToBinary(keys[i]),document.getElementById("marker-width").value,1,colors[0]);
+    var noteCell= row.insertCell();
+    noteCell.textContent = values[i];
+    var downloadCell = row.insertCell();
+    const downloadButton = document.createElement('button');
+    downloadButton.textContent = 'Download';
+    downloadButton.classList.add('create-button');
+    downloadButton.addEventListener('click', () => download(markerCell.innerHTML, 'ID-' + i + '.svg', 'image/svg'));
+    downloadCell.appendChild(downloadButton);
+  }
+    }
+
+
+    function createSiblings(){
+        var binaryArray = binaryString.split("");
+        var matrix = []
+        var siblings = []
+        for (let i = 0; i < binaryArray.length; i += width) 
+        {
+         matrix.push(binaryArray.slice(i, i + width).map(function(x) { return parseInt(x); }));
+        }
+        // original code in hex
+        siblings.push(binaryToHexWithPrefix(binaryString));
+        // rotate 90 degree x 3
+        var matrix_temp = rotateMatrix(matrix)
+        siblings.push(binaryToHexWithPrefix(matrix_temp.flat().join("")));
+      
+        matrix_temp = rotateMatrix(matrix_temp)
+        siblings.push(binaryToHexWithPrefix(matrix_temp.flat().join("")));
+        
+        matrix_temp = rotateMatrix(matrix_temp)
+        siblings.push(binaryToHexWithPrefix(matrix_temp.flat().join("")));
+
+        codeSiblingsDict[hexCode] = siblings;
+    }
+
+    function isSymmetry(){
+        var binaryArray = binaryString.split("");
+        var matrix = []
+        var siblings = []
+        for (let i = 0; i < binaryArray.length; i += width) 
+        {
+         matrix.push(binaryArray.slice(i, i + width).map(function(x) { return parseInt(x); }));
+        }
+
+        siblings.push(binaryToHexWithPrefix(flipMatrixHorizontal(matrix).flat().join("")));
+        
+        siblings.push(binaryToHexWithPrefix(flipMatrixVertical(matrix).flat().join("")));
+
+        if(siblings.includes(hexCode)){
+            return true;
+        }
+
+        else return false;
+       
+    }
+
+    var download = function (data, filename, type) {
+      var file = new Blob([data], {
+        type: type
+      });
+      if (window.navigator.msSaveOrOpenBlob) // IE10+
+        window.navigator.msSaveOrOpenBlob(file, filename);
+      else { // Others
+        var a = document.createElement("a"),
+          url = URL.createObjectURL(file);
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () {
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        }, 0);
+      }
+    };
+
+  function rotateMatrix(matrix) {
+  // Create a new matrix to store the rotated values
+  let rotatedMatrix = [];
+  for (let i = 0; i < matrix.length; i++) {
+    rotatedMatrix.push([]);
+  }
+
+  // Step 1: Transpose the matrix
+  for (let i = 0; i < matrix.length; i++) {
+    for (let j = 0; j < matrix.length; j++) {
+      rotatedMatrix[j][i] = matrix[i][j];
+    }
+  }
+  
+  // Step 2: Reverse each row of the transposed matrix
+  for (let i = 0; i < rotatedMatrix.length; i++) {
+    rotatedMatrix[i].reverse();
+  }
+  
+  return rotatedMatrix;
+}
+
+function cleanDictionary(dictionary){
+  Object.keys(dictionary).forEach(key => {
+  if (dictionary[key]) {
+    delete dictionary[key];
+  }
+});
+}
+
+function createCombination(){
+cleanDictionary(codeCombinationDict);
+    var groups = [];
+
+for (var key in codeDict) {
+  var value = codeDict[key];
+  if (!groups[value-1]) {
+    groups[value-1] = [];
+  }
+  groups[value-1].push(key);
+}
+console.log(groups);
+    if(groups.length<2){
+        alert('Not enough layer!');
+        return;
+    }
+
+    else{
+        console.log('experimental');
+        
+        // recursive function
+        generateGroupCombinations(groups);
+    }
+
+    createTable();
+    createCodeBlock();
+    addCombinationTable();
+}
+
+
+function generateGroupCombinations(groups) {
+        function generateCombinations(selectedGroups, remainingGroups) {
+          if (selectedGroups.length >= 2) {
+            console.log(selectedGroups);
+            iterateCombinations(selectedGroups); 
+          }
+          for (let i = 0; i < remainingGroups.length; i++) {
+            const newSelectedGroups = [...selectedGroups, remainingGroups[i]];
+            const newRemainingGroups = remainingGroups.slice(i + 1);
+            generateCombinations(newSelectedGroups, newRemainingGroups);
+          }
+        }
+        generateCombinations([], groups);
+      }
+
+function iterateCombinations(groups, combination = [], groupIndex = 0) {
+  if (groupIndex === groups.length) {
+    console.log(combination); // or do whatever you want with the combination
+// continue from here. replace the following groups into its siblings
+    var alternateGroup = [];
+    alternateGroup.push(combination[0]); 
+
+    for(let j=1;j<combination.length;j++){
+        alternateGroup.push(codeSiblingsDict[combination[j]]);
+        console.log(codeSiblingsDict[combination[j]]);
+    }
+
+    console.log(alternateGroup);
+    var combo = iterateArrayCombinations(alternateGroup);
+
+    console.log(combo);
+    
+    for(let i=0;i<combo.length;i++){
+      for(let j=0;j<combo[i].length;j++){
+        var note = Object.keys(codeDict).indexOf(combo[i][0])+"+";
+        if(codeDict.hasOwnProperty(combo[i][j])){
+            note += (Object.keys(codeDict).indexOf(combo[i][j])+"u");
+        }
+        else {
+          // find the key from the sibling dictionary
+          var result = findKeyAndIndex(codeSiblingsDict, combo[i][j]);
+          // result.key; result.index 1-r 2-d 3-l
+          var dir = '';
+          if(result['index'] == 1){dir = 'r';}
+          if(result['index'] == 2){dir = 'd';}
+          if(result['index'] == 3){dir = 'l';}
+          note += (Object.keys(codeDict).indexOf(result.key)+dir);
+        }
+      }
+      codeCombinationDict[binaryToHexWithPrefix(combineBinaryStrings(combo[i]))]=note;
+    }
+    return;
+  }
+  const currentGroup = groups[groupIndex];
+  for (let i = 0; i < currentGroup.length; i++) {
+    const newCombination = [...combination, currentGroup[i]];
+    iterateCombinations(groups, newCombination, groupIndex + 1);
+  }
+}
+
+function iterateArrayCombinations(arrays) {
+  const combinations = [];
+  // Use a recursive function to iterate through all combinations
+  function combine(currentCombo, remainingArrays) {
+    if (remainingArrays.length === 0) {
+      // Base case: if there are no more arrays to combine, add the current combination to the list
+      combinations.push(currentCombo);
+    } else {
+      // Recursive case: iterate through each element of the next array and combine with the current combination
+      const nextArray = remainingArrays[0];
+      if (Array.isArray(nextArray)) {
+        for (let i = 0; i < nextArray.length; i++) {
+          combine([...currentCombo, nextArray[i]], remainingArrays.slice(1));
+        }
+      } else {
+        // If the next array is not an array (e.g., a string), skip it and move on to the next array
+        combine(currentCombo, remainingArrays.slice(1));
+      }
+    }
+  }
+  // Start with an empty combination and all arrays
+  combine([arrays[0]], arrays);
+
+  return combinations;
+}
+
+// Function to find key and index based on given element
+function findKeyAndIndex(dict, element) {
+  for (let key in dict) {
+    let index = dict[key].indexOf(element);
+    if (index !== -1) {
+      return {key: key, index: index};
+    }
+  }
+  return null; // Return null if element not found in any array
+}
+
+
+function combineBinaryStrings(multiplyBinaryStrings){
+    var output = "1".repeat(width*height);
+
+    for (let i = 0;i<multiplyBinaryStrings.length;i++){
+      output = combineTwoBinaryStrings(output,hexToBinary(multiplyBinaryStrings[i],width*height));
+    console.log(hexToBinary(multiplyBinaryStrings[i],width*height));
+    }
+
+    return output;
+}
+
+function combineTwoBinaryStrings(str1, str2) {
+  let result = "";
+  for (let i = 0; i < str1.length; i++) {
+    if (str1[i] == "0" || str2[i] == "0") {
+      result += "0";
+    } else {
+      result += "1";
+    }
+  }
+  console.log(result);
+  return result;
+}
+
+function flipMatrixHorizontal(matrix) {
+  // Create a new matrix to store the flipped values
+  let flippedMatrix = [];
+  for (let i = 0; i < matrix.length; i++) {
+    flippedMatrix.push([]);
+    for (let j = matrix[i].length - 1; j >= 0; j--) {
+      flippedMatrix[i].push(matrix[i][j]);
+    }
+  }
+  
+  return flippedMatrix;
+}
+
+function flipMatrixVertical(matrix) {
+  // Create a new matrix to store the flipped values
+  let flippedMatrix = [];
+  for (let i = matrix.length - 1; i >= 0; i--) {
+    flippedMatrix.push([]);
+    for (let j = 0; j < matrix[i].length; j++) {
+      flippedMatrix[matrix.length - 1 - i].push(matrix[i][j]);
+    }
+  }
+  
+  return flippedMatrix;
+}
+    
+
+function sortDictionaryByValue(dict) {
+  // Extract the keys and values from the dictionary
+  var keys = Object.keys(dict);
+  var values = Object.values(dict);
+
+  // Create an array of key-value pairs
+  var keyValuePairs = [];
+  for (let i = 0; i < keys.length; i++) {
+    keyValuePairs.push([keys[i], values[i]]);
+  }
+
+  // Sort the key-value pairs based on the values
+  keyValuePairs.sort(function(a, b) {
+    return a[1] - b[1];
+  });
+
+  // Create a new object from the sorted key-value pairs
+  const sortedDict = {};
+  for (let i = 0; i < keyValuePairs.length; i++) {
+    sortedDict[keyValuePairs[i][0]] = keyValuePairs[i][1];
+  }
+
+  // Return the sorted dictionary
+  return sortedDict;
+}
+
+function generateCodeVisualization(index){
+
+//  // all caps are necessary!!!
+//  AR.DICTIONARIES['custom'] = {
+//  nBits: width * height,
+//  tau: null,
+//  codeList: Object.keys(codeDict)};
+
+//  var dict = new AR.Dictionary('custom');
+
+  var markerSVG = document.getElementById("markerSVG");
+  markerSVG.innerHTML ='';
+  for(let i=0;i<Object.keys(codeDict).length;i++){
+    markerSVG.innerHTML += generateSVG(hexToBinary(codeDict[i].key),50,1,colors[codeDict[i].value]);
+  };
+  
+}
+
+function generateRandomPattern(threshold) {
+  clearPattern();
+  let layer = document.getElementById("layer-index").value;
+  console.log(document.getElementById("toggle-ring").checked);
+  if(!document.getElementById("toggle-ring").checked){
+    for (let i = 0; i < height; i++) {
+    for (let j = 0; j < width; j++) {
+      const button = buttons[i][j];
+      const isBlack = Math.random() < threshold;
+      button.style.backgroundColor = isBlack ? 'black' : 'white';
+    }
+  }
+  }
+  else if (layer<=(width+1)/2){
+    for (let i = layer-1; i < height-layer+1; i++) {
+      {
+      for (let j = layer-1; j < width-layer+1; j++) {
+      {
+        if( i<layer|| i>height-layer-1 || j<layer||j>height-layer-1){
+          const button = buttons[i][j];
+          const isBlack = Math.random() < threshold;
+          button.style.backgroundColor = isBlack ? 'black' : 'white';
+        }
+
+      }
+    }
+      }
+
+  }
+  }
+  updateBinaryStringAndHexCode();
+}
+
+function generateSVG(binaryString, blockWidth, borderSize,  color) {
+        // squareSize size of each square in pixels
+        // borderSize = 1; // size of the border in squares
+        const gridSize = Math.sqrt(binaryString.length); // calculate the size of the grid
+        const squareSize = blockWidth / (gridSize + 2 * borderSize);
+        // create a new SVG element
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("width", (gridSize + 2 * borderSize) * squareSize);
+        svg.setAttribute("height", (gridSize + 2 * borderSize) * squareSize);
+
+        // create a black rectangle to fill the background
+        const background = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        background.setAttribute("x", "0");
+        background.setAttribute("y", "0");
+        background.setAttribute("width", (gridSize + 2 * borderSize) * squareSize);
+        background.setAttribute("height", (gridSize + 2 * borderSize) * squareSize);
+        background.setAttribute("fill", "#000");
+        svg.appendChild(background);
+
+        // loop through each square in the grid
+        for (let i = 0; i < gridSize; i++) {
+          for (let j = 0; j < gridSize; j++) {
+            // create a new square element
+            const square = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            square.setAttribute("x", (j + borderSize) * squareSize);
+            square.setAttribute("y", (i + borderSize) * squareSize);
+            square.setAttribute("width", squareSize);
+            square.setAttribute("height", squareSize);
+            // set the fill color based on the binary string
+            if (binaryString.charAt(i * gridSize + j) === "1") {
+              square.setAttribute("fill", "#fff");
+            } else {
+              square.setAttribute("fill", color);
+            }
+            svg.appendChild(square);
+          }
+        }
+
+        // return the SVG element as a string
+        return new XMLSerializer().serializeToString(svg);
+      }
+
+
+
+  </script>
+</body>
+</html>
+
