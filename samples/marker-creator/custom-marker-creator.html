@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Button Grid</title>
+  <title>Custom Marker Creator</title>
   <style>
     button {
       width: 30px;
@@ -112,7 +112,7 @@ svg {
 </div>
  
   <div>
-    <button class="create-button" onclick="generateRandomPattern(parseFloat(document.getElementById('threshold-input').value))">Generate Pattern</button>
+    <button class="create-button" onclick="generateRandomPattern()">Generate Pattern</button>
   </div>
 
   <div>
@@ -217,7 +217,7 @@ for (let i = 0; i < colors.length; i++) {
         for (let j = 0; j < width; j++) {
           const button = document.createElement('button');
           button.addEventListener('click', () => {
-            button.style.backgroundColor = button.style.backgroundColor === 'black' ? 'white' : 'black';
+            button.style.backgroundColor = button.style.backgroundColor == 'black' ? 'white' : 'black';
             updateBinaryStringAndHexCode();
           });
           row.push(button);
@@ -230,24 +230,38 @@ for (let i = 0; i < colors.length; i++) {
       updateBinaryStringAndHexCode();
     }
 
-    function binaryToHexWithPrefix(binaryString) {
-  const decimalValue = BigInt("0b" + binaryString);
-  const hexString = "0x" + decimalValue.toString(16).toUpperCase();
+function binaryToHex(bString) {
+  // Pad the binary string with leading zeros, if necessary
+  while (bString.length % 4 !== 0) {
+    bString = '0' + bString;
+  }
+
+  // Convert the binary string to hex
+  let hexString = '';
+  for (let i = 0; i < bString.length; i += 4) {
+    let binaryChunk = bString.substr(i, 4);
+    let hexDigit = parseInt(binaryChunk, 2).toString(16).toUpperCase();
+    hexString += hexDigit;
+  }
+
   return hexString;
 }
 
-    function hexToBinary(hexString, numDigits) {
+function binaryToHexWithPrefix(bString) {
+  return ("0x" + binaryToHex(bString));
+}
+
+function hexToBinary(hexString, numDigits) {
   // Parse the hexadecimal string into an integer
   const hexInt = BigInt(hexString);
   
   // Convert the integer to a binary string
-  let binaryString = hexInt.toString(2);
+  let bString = hexInt.toString(2);
   
-  // Add leading 1s if necessary
-  const padding = "1".repeat(numDigits - binaryString.length);
-  binaryString = padding + binaryString;
-  
-  return binaryString;
+  // Add leading 0s if necessary
+  const padding = "0".repeat(numDigits - bString.length);
+  bString = padding + bString;
+  return bString;
 }
 
     function updateBinaryStringAndHexCode() {
@@ -272,13 +286,13 @@ for (let i = 0; i < colors.length; i++) {
           button.style.backgroundColor = 'white';
         }
       }
+      updateBinaryStringAndHexCode();
     }
 
     function savePattern() {
           // Check if the hex code is already in the code list
 
-          let deadCodeList = Object.values(codeDict).reduce((acc, val) => {return acc.concat(val);}, []);
-
+    let deadCodeList = Object.values(codeDict).reduce((acc, val) => {return acc.concat(val);}, []);
 
     if (deadCodeList.includes(hexCode)) {
         alert('This pattern is already included!');
@@ -318,13 +332,6 @@ for (let i = 0; i < colors.length; i++) {
  
   codes = Object.keys(codeDict);
   codes = codes.concat(Object.keys(codeCombinationDict));
-  // if this part is needed, make sure to include aruco.js and cv.js
-//  var AR = this.AR || require('../aruco').AR;
-//  AR.DICTIONARIES['custom'] = {
-//    nBits: width * height,
-//    tau: null,
-//    codeList: codes};
-//  dict = new AR.Dictionary('custom');
 }
 
   function createTable(){
@@ -344,7 +351,7 @@ for (let i = 0; i < colors.length; i++) {
     var hexCell = row.insertCell();
     hexCell.textContent = keys[i];
     var markerCell= row.insertCell();
-    markerCell.innerHTML += generateSVG(hexToBinary(keys[i]),document.getElementById("marker-width").value,1,colors[values[i]-1]);
+    markerCell.innerHTML += generateSVG(hexToBinary(keys[i],width*height),document.getElementById("marker-width").value,1,colors[values[i]-1]);
     var noteCell= row.insertCell();
     noteCell.textContent = values[i];
     var downloadCell = row.insertCell();
@@ -381,7 +388,7 @@ for (let i = 0; i < colors.length; i++) {
     var hexCell = row.insertCell();
     hexCell.textContent = keys[i];
     var markerCell= row.insertCell();
-    markerCell.innerHTML += generateSVG(hexToBinary(keys[i]),document.getElementById("marker-width").value,1,colors[0]);
+    markerCell.innerHTML += generateSVG(hexToBinary(keys[i],width*height),document.getElementById("marker-width").value,1,colors[0]);
     var noteCell= row.insertCell();
     noteCell.textContent = values[i];
     var downloadCell = row.insertCell();
@@ -636,7 +643,6 @@ function combineTwoBinaryStrings(str1, str2) {
       result += "1";
     }
   }
-  console.log(result);
   return result;
 }
 
@@ -706,15 +712,16 @@ function generateCodeVisualization(index){
   var markerSVG = document.getElementById("markerSVG");
   markerSVG.innerHTML ='';
   for(let i=0;i<Object.keys(codeDict).length;i++){
-    markerSVG.innerHTML += generateSVG(hexToBinary(codeDict[i].key),50,1,colors[codeDict[i].value]);
+    markerSVG.innerHTML += generateSVG(hexToBinary(codeDict[i].key,width*height),50,1,colors[codeDict[i].value]);
   };
   
 }
 
-function generateRandomPattern(threshold) {
+function generateRandomPattern() {
   clearPattern();
+  updateBinaryStringAndHexCode();
+  threshold = parseFloat(document.getElementById('threshold-input').value);
   let layer = document.getElementById("layer-index").value;
-  console.log(document.getElementById("toggle-ring").checked);
   if(!document.getElementById("toggle-ring").checked){
     for (let i = 0; i < height; i++) {
     for (let j = 0; j < width; j++) {
@@ -744,10 +751,10 @@ function generateRandomPattern(threshold) {
   updateBinaryStringAndHexCode();
 }
 
-function generateSVG(binaryString, blockWidth, borderSize,  color) {
+function generateSVG(bString, blockWidth, borderSize,  color) {
         // squareSize size of each square in pixels
         // borderSize = 1; // size of the border in squares
-        const gridSize = Math.sqrt(binaryString.length); // calculate the size of the grid
+        const gridSize = Math.sqrt(bString.length); // calculate the size of the grid
         const squareSize = blockWidth / (gridSize + 2 * borderSize);
         // create a new SVG element
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -773,7 +780,7 @@ function generateSVG(binaryString, blockWidth, borderSize,  color) {
             square.setAttribute("width", squareSize);
             square.setAttribute("height", squareSize);
             // set the fill color based on the binary string
-            if (binaryString.charAt(i * gridSize + j) === "1") {
+            if (bString.charAt(i * gridSize + j) === "1") {
               square.setAttribute("fill", "#fff");
             } else {
               square.setAttribute("fill", color);
