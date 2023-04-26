@@ -3,127 +3,154 @@
 <head>
   <title>Custom Marker Creator</title>
   <style>
-    button {
+
+body {
+  font-family: Arial, sans-serif;
+}
+  #grid {
+  line-height: 0; 
+  }
+
+    .save-button {
+      background: #2f781f;
+  background-image: -webkit-linear-gradient(top, #2f781f, #748a3d);
+  background-image: -moz-linear-gradient(top, #2f781f, #748a3d);
+  background-image: -ms-linear-gradient(top, #2f781f, #748a3d);
+  background-image: -o-linear-gradient(top, #2f781f, #748a3d);
+  background-image: linear-gradient(to bottom, #2f781f, #748a3d);
+  -webkit-border-radius: 28;
+  -moz-border-radius: 28;
+  border-radius: 28px;
+  font-family: Arial;
+  color: #ffffff;
+  font-size: 20px;
+  padding: 10px 20px 10px 20px;
+  text-decoration: none;
+    }
+    .save-button:hover {
+  background: #3cb0fd;
+  background-image: -webkit-linear-gradient(top, #3cb0fd, #3498db);
+  background-image: -moz-linear-gradient(top, #3cb0fd, #3498db);
+  background-image: -ms-linear-gradient(top, #3cb0fd, #3498db);
+  background-image: -o-linear-gradient(top, #3cb0fd, #3498db);
+  background-image: linear-gradient(to bottom, #3cb0fd, #3498db);
+  text-decoration: none;
+}
+    .clear-button {
+  background: #b02929;
+  background-image: -webkit-linear-gradient(top, #b02929, #d92b2b);
+  background-image: -moz-linear-gradient(top, #b02929, #d92b2b);
+  background-image: -ms-linear-gradient(top, #b02929, #d92b2b);
+  background-image: -o-linear-gradient(top, #b02929, #d92b2b);
+  background-image: linear-gradient(to bottom, #b02929, #d92b2b);
+  -webkit-border-radius: 28;
+  -moz-border-radius: 28;
+  border-radius: 28px;
+  font-family: Arial;
+  color: #ffffff;
+  font-size: 20px;
+  padding: 10px 20px 10px 20px;
+  text-decoration: none;
+    }
+    
+    .clear-button:hover {
+  background: #3cb0fd;
+  background-image: -webkit-linear-gradient(top, #3cb0fd, #3498db);
+  background-image: -moz-linear-gradient(top, #3cb0fd, #3498db);
+  background-image: -ms-linear-gradient(top, #3cb0fd, #3498db);
+  background-image: -o-linear-gradient(top, #3cb0fd, #3498db);
+  background-image: linear-gradient(to bottom, #3cb0fd, #3498db);
+  text-decoration: none;
+}
+
+    .create-button {
+      background: #3498db;
+  background-image: -webkit-linear-gradient(top, #3498db, #2980b9);
+  background-image: -moz-linear-gradient(top, #3498db, #2980b9);
+  background-image: -ms-linear-gradient(top, #3498db, #2980b9);
+  background-image: -o-linear-gradient(top, #3498db, #2980b9);
+  background-image: linear-gradient(to bottom, #3498db, #2980b9);
+  -webkit-border-radius: 28;
+  -moz-border-radius: 28;
+  border-radius: 28px;
+  font-family: Arial;
+  color: #ffffff;
+  font-size: 20px;
+  padding: 10px 20px 10px 20px;
+  text-decoration: none;
+}
+
+.create-button:hover {
+  background: #3cb0fd;
+  background-image: -webkit-linear-gradient(top, #3cb0fd, #3498db);
+  background-image: -moz-linear-gradient(top, #3cb0fd, #3498db);
+  background-image: -ms-linear-gradient(top, #3cb0fd, #3498db);
+  background-image: -o-linear-gradient(top, #3cb0fd, #3498db);
+  background-image: linear-gradient(to bottom, #3cb0fd, #3498db);
+  text-decoration: none;
+}
+
+.centered {
+  width: 60%;
+  margin: 10px auto;
+
+  /* border: 1px solid red; */
+}
+
+.grid-button {
       width: 30px;
       height: 30px;
       border:1px solid gray;
       background-color: white;
-      margin: 0; /* Add this line */
-      padding: 0; /* Add this line */
+      margin: 0; 
+      padding: 0; 
     }
-
-    color-button {
-        width: 50px;
-        height: 50px;
-        border: none;
-        margin: 5px;
-      }
-    #grid {
-  line-height: 0; /* Add this line */
-}
-
-    .save-button {
-      background-color: green;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      margin-right: 10px;
-      width: 150px; 
-      cursor: pointer;
-    }
-
-    .clear-button {
-      background-color: red;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      width: 150px; 
-      cursor: pointer;
-    }
-
-    .create-button {
-      background-color: gray;
-      color: black;
-      border: 1px;
-      padding: 5px 10px;
-      width: 150px; 
-      cursor: pointer;
-    }
-
-    .delete-button {
-  background-color: red;
-  font-size: 16px;
-  width: 80px; 
-  border: none;
-  cursor: pointer;
-}
-
-svg {
-  height:100%;
-  width: 100%;
-}
-#markerSVG {
-  height: 40%;
-  width: 40%;
-}
   </style>
 </head>
 <body>
-    <div>
+  <h1 class="centered">Custom Marker Creator</h1>
+    <div class="centered">     
         <label for="width-input">Pattern Width:</label>
         <input type="number" id="width-input" min="1" max="7" value="5">
         <button class="create-button" onclick="createGrid()">Create Grid</button>
     </div>
 
-    <div>
+    <div class="centered">
       <label for="marker-width">Marker Width:</label>
       <input type="number" id="marker-width" min="50" max="500" unit="50" value="200">
+      <label for="layer-index">Layer:</label>
+      <input type="number" id="layer-index" min="1" max="10" value="1">
   </div>
 
-  <div id="grid"></div>
+  <div id="grid"  class="centered"></div>
 
-  <div>
+  <div class="centered">
     <label>Binary string:</label>
     <span id="binary-string"></span>
+    
   </div>
 
-  <div>
+  <div class="centered">
     <label>Hex code:</label>
     <span id="hex-code"></span>
   </div>
 
-  <div>
+  <div class="centered">
+    <button class="save-button" onclick="savePattern()">Save Pattern</button>
     <button class="clear-button" onclick="clearPattern()">Clear Pattern</button>
+    <button class="create-button" onclick="createCombination()">Generate Code</button>
   </div>
-
-  <div>
-    <label for="layer-index">Layer:</label>
-    <input type="number" id="layer-index" min="1" max="10" value="1">
-  </div>
-
-  <div>
+  
+  <div class="centered">
     <label for="threshold-input">Threshold:</label>
     <input type="range" id="threshold-input" min="0" max="1" step="0.01" value="0.5">
-  </div>
-
-  <div>
-  <label for="toggle-checkbox">Ring-style generation:</label>
-  <input type="checkbox" id="toggle-ring">
-</div>
- 
-  <div>
+    <label for="toggle-checkbox">Ring-style generation:</label>
+    <input type="checkbox" id="toggle-ring">
     <button class="create-button" onclick="generateRandomPattern()">Generate Pattern</button>
   </div>
+ 
 
-  <div>
-    <button class="save-button" onclick="savePattern()">Save Pattern</button>
-  </div>
-
-  <div>
-    <button class="create-button" onclick="createCombination()">Generate List & Code</button>
-  </div>
-
-  <div>
+  <div class="centered">
     <!-- Display the color options from the palette array -->
     <h2>Marker colors</h2>
     <div id="color-buttons">
@@ -140,19 +167,19 @@ svg {
     </div>
   </div>
 
-  <div>
-    <textarea id="note-area" rows="10" cols="50"></textarea>
+  <div class="centered">
+    <textarea  id="note-area" rows="10" cols="60"></textarea>
   </div>
 
 
 
-  <table id="pattern-table">
+  <table id="pattern-table" class="centered">
     <thead>
       <tr>
-        <th>ID-----</th>
-        <th>Hex---------------</th>
-        <th>Note----------</th>
-        <th>Marker-----</th>
+        <th>ID</th>
+        <th>Hex</th>
+        <th>Note</th>
+        <th>Marker</th>
         <th>Download</th>
         <th>Delete</th>
       </tr>
@@ -162,9 +189,6 @@ svg {
     </tbody>
   </table>
 
-  <div>
-    <div id="markerSVG"> Markers </div>
-  </div>
 
   <script>
 
@@ -216,6 +240,7 @@ for (let i = 0; i < colors.length; i++) {
 
         for (let j = 0; j < width; j++) {
           const button = document.createElement('button');
+          button.classList.add("grid-button");
           button.addEventListener('click', () => {
             button.style.backgroundColor = button.style.backgroundColor == 'black' ? 'white' : 'black';
             updateBinaryStringAndHexCode();
@@ -364,7 +389,7 @@ function hexToBinary(hexString, numDigits) {
     var deleteCell = row.insertCell();
     const deleteButton = document.createElement('button');
     deleteButton.textContent = 'Delete';
-    deleteButton.classList.add('delete-button');
+    deleteButton.classList.add('clear-button');
     deleteButton.addEventListener('click', () => deleteCode(keys[i]));
     deleteCell.appendChild(deleteButton);
   }
