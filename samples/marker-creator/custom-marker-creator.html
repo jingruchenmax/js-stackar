@@ -317,7 +317,10 @@ function hexToBinary(hexString, numDigits) {
     function savePattern() {
           // Check if the hex code is already in the code list
 
-    let deadCodeList = Object.values(codeDict).reduce((acc, val) => {return acc.concat(val);}, []);
+    let deadCodeList = Object.keys(codeDict); 
+    let siblings = Object.values(codeSiblingsDict).reduce((acc, val) => {return acc.concat(val);}, []);
+    siblings.forEach(item => {deadCodeList.push(item);});
+    console.log(deadCodeList);
 
     if (deadCodeList.includes(hexCode)) {
         alert('This pattern is already included!');
