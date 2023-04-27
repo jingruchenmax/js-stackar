@@ -111,7 +111,7 @@ body {
   <h1 class="centered">Custom Marker Creator</h1>
     <div class="centered">     
         <label for="width-input">Pattern Width:</label>
-        <input type="number" id="width-input" min="1" max="7" value="5">
+        <input type="number" id="width-input" min="1" value="5">
         <button class="create-button" onclick="createGrid()">Create Grid</button>
     </div>
 
@@ -138,7 +138,6 @@ body {
   <div class="centered">
     <button class="save-button" onclick="savePattern()">Save Pattern</button>
     <button class="clear-button" onclick="clearPattern()">Clear Pattern</button>
-    <button class="create-button" onclick="createCombination()">Generate Code</button>
   </div>
   
   <div class="centered">
@@ -149,6 +148,11 @@ body {
     <button class="create-button" onclick="generateRandomPattern()">Generate Pattern</button>
   </div>
  
+  <div class="centered">
+    <label for="toggle-checkbox">Upward only:</label>
+    <input type="checkbox" id="upward">
+    <button class="create-button" onclick="createCombination()">Generate Combination</button>
+  </div>
 
   <div class="centered">
     <!-- Display the color options from the palette array -->
@@ -524,7 +528,7 @@ function cleanDictionary(dictionary){
 }
 
 function createCombination(){
-cleanDictionary(codeCombinationDict);
+    cleanDictionary(codeCombinationDict);
     var groups = [];
 
 for (var key in codeDict) {
@@ -534,20 +538,16 @@ for (var key in codeDict) {
   }
   groups[value-1].push(key);
 }
-console.log(groups);
     if(groups.length<2){
         alert('Not enough layer!');
         return;
     }
 
-    else{
-        console.log('experimental');
-        
+    else{     
         // recursive function
         generateGroupCombinations(groups);
     }
 
-    createTable();
     createCodeBlock();
     addCombinationTable();
 }
@@ -557,7 +557,12 @@ function generateGroupCombinations(groups) {
         function generateCombinations(selectedGroups, remainingGroups) {
           if (selectedGroups.length >= 2) {
             console.log(selectedGroups);
-            iterateCombinations(selectedGroups); 
+            if(document.getElementById("upward").checked){
+              iterateUpwardCombinations(selectedGroups);
+            }
+            else{
+              iterateCombinations(selectedGroups); 
+            }    
           }
           for (let i = 0; i < remainingGroups.length; i++) {
             const newSelectedGroups = [...selectedGroups, remainingGroups[i]];
@@ -572,7 +577,7 @@ function iterateCombinations(groups, combination = [], groupIndex = 0) {
   if (groupIndex === groups.length) {
     console.log(combination); // or do whatever you want with the combination
 // continue from here. replace the following groups into its siblings
-    var alternateGroup = [];
+    let alternateGroup = [];
     alternateGroup.push(combination[0]); 
 
     for(let j=1;j<combination.length;j++){
@@ -581,25 +586,25 @@ function iterateCombinations(groups, combination = [], groupIndex = 0) {
     }
 
     console.log(alternateGroup);
-    var combo = iterateArrayCombinations(alternateGroup);
+    let combo = iterateArrayCombinations(alternateGroup);
 
     console.log(combo);
     
     for(let i=0;i<combo.length;i++){
+      let note = "";
       for(let j=0;j<combo[i].length;j++){
-        var note = Object.keys(codeDict).indexOf(combo[i][0])+"+";
         if(codeDict.hasOwnProperty(combo[i][j])){
-            note += (Object.keys(codeDict).indexOf(combo[i][j])+"u");
+            note += "_"+(Object.keys(codeDict).indexOf(combo[i][j])+"u");
         }
         else {
           // find the key from the sibling dictionary
-          var result = findKeyAndIndex(codeSiblingsDict, combo[i][j]);
+          let result = findKeyAndIndex(codeSiblingsDict, combo[i][j]);
           // result.key; result.index 1-r 2-d 3-l
-          var dir = '';
+          let dir = '';
           if(result['index'] == 1){dir = 'r';}
           if(result['index'] == 2){dir = 'd';}
           if(result['index'] == 3){dir = 'l';}
-          note += (Object.keys(codeDict).indexOf(result.key)+dir);
+          note += "+"+(Object.keys(codeDict).indexOf(result.key)+dir);
         }
       }
       codeCombinationDict[binaryToHexWithPrefix(combineBinaryStrings(combo[i]))]=note;
@@ -610,6 +615,25 @@ function iterateCombinations(groups, combination = [], groupIndex = 0) {
   for (let i = 0; i < currentGroup.length; i++) {
     const newCombination = [...combination, currentGroup[i]];
     iterateCombinations(groups, newCombination, groupIndex + 1);
+  }
+}
+
+function iterateUpwardCombinations(groups, combination = [], groupIndex = 0) {
+  if (groupIndex === groups.length) {
+    console.log(combination); // or do whatever you want with the combination
+// if all markers are forced to be up, then no need to introduce alternate group
+    let note = "";
+    for(let i=0;i<combination.length;i++){
+     
+      note += "_"+(Object.keys(codeDict).indexOf(combination[i])+"u");     
+    }
+    codeCombinationDict[binaryToHexWithPrefix(combineBinaryStrings(combination))]=note;
+    return;
+  }
+  const currentGroup = groups[groupIndex];
+  for (let i = 0; i < currentGroup.length; i++) {
+    const newCombination = [...combination, currentGroup[i]];
+    iterateUpwardCombinations(groups, newCombination, groupIndex + 1);
   }
 }
 
@@ -725,24 +749,6 @@ function sortDictionaryByValue(dict) {
 
   // Return the sorted dictionary
   return sortedDict;
-}
-
-function generateCodeVisualization(index){
-
-//  // all caps are necessary!!!
-//  AR.DICTIONARIES['custom'] = {
-//  nBits: width * height,
-//  tau: null,
-//  codeList: Object.keys(codeDict)};
-
-//  var dict = new AR.Dictionary('custom');
-
-  var markerSVG = document.getElementById("markerSVG");
-  markerSVG.innerHTML ='';
-  for(let i=0;i<Object.keys(codeDict).length;i++){
-    markerSVG.innerHTML += generateSVG(hexToBinary(codeDict[i].key,width*height),50,1,colors[codeDict[i].value]);
-  };
-  
 }
 
 function generateRandomPattern() {
