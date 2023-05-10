@@ -7,7 +7,7 @@
 
 100% JavaScript (see details bellow):
 
-- [Custom Markers Creator](https://damianofalcioni.github.io/js-aruco2/samples/marker-creator/marker-creator.html)
+- [Custom Markers Creator](https://jingruchenmax.github.io/js-stackar/samples/marker-creator/custom-marker-creator.html)
 
 ## Markers 
 
